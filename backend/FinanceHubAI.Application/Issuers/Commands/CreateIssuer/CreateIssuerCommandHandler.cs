@@ -1,4 +1,5 @@
 ﻿using FinanceHubAI.Application.Common.Interfaces;
+using FinanceHubAI.Application.Common.Responses;
 using FinanceHubAI.Domain.Entities;
 using FinanceHubAI.Domain.Enums;
 using FinanceHubAI.Domain.ValueObjects;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace FinanceHubAI.Application.Issuers.Commands.CreateIssuer;
 
 public sealed class CreateIssuerCommandHandler
-    : IRequestHandler<CreateIssuerCommand, Guid>
+    : IRequestHandler<CreateIssuerCommand, Result<Guid>>
 {
     private readonly IFinanceHubDbContext _context;
     private readonly ICurrentUserService _currentUserService;
@@ -21,7 +22,7 @@ public sealed class CreateIssuerCommandHandler
         _currentUserService = currentUserService;
     }
 
-    public async Task<Guid> Handle(
+    public async Task<Result<Guid>> Handle(
         CreateIssuerCommand request,
         CancellationToken cancellationToken)
     {
@@ -29,7 +30,12 @@ public sealed class CreateIssuerCommandHandler
             .AnyAsync(x => x.RegistrationNumber == request.RegistrationNumber, cancellationToken);
 
         if (registrationNumberExists)
-            throw new InvalidOperationException("Issuer registration number already exists.");
+        {
+            return Result<Guid>.Failure(
+                new Error(
+                    "Issuer.RegistrationNumberAlreadyExists",
+                    "Issuer registration number already exists."));
+        }
 
         var address = Address.Create(
             request.Country,
@@ -68,6 +74,6 @@ public sealed class CreateIssuerCommandHandler
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return issuer.Id;
+        return Result<Guid>.Success(issuer.Id);
     }
 }

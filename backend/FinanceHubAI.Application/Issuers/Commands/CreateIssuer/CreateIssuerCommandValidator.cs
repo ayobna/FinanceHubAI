@@ -2,7 +2,8 @@
 
 namespace FinanceHubAI.Application.Issuers.Commands.CreateIssuer;
 
-public class CreateIssuerCommandValidator : AbstractValidator<CreateIssuerCommand>
+public sealed class CreateIssuerCommandValidator
+    : AbstractValidator<CreateIssuerCommand>
 {
     public CreateIssuerCommandValidator()
     {
@@ -34,12 +35,18 @@ public class CreateIssuerCommandValidator : AbstractValidator<CreateIssuerComman
             .EmailAddress()
             .When(x => !string.IsNullOrWhiteSpace(x.Email));
 
-        RuleFor(x => x.MarketCap)
-            .GreaterThanOrEqualTo(0)
-            .When(x => x.MarketCap.HasValue);
+        RuleFor(x => x.Website)
+            .MaximumLength(250);
+
+        RuleFor(x => x.PhoneNumber)
+            .MaximumLength(50);
 
         RuleFor(x => x.StockSymbol)
             .NotEmpty()
             .When(x => x.IsPublicCompany);
+
+        RuleFor(x => x.MarketCap)
+            .GreaterThanOrEqualTo(0)
+            .When(x => x.MarketCap.HasValue);
     }
 }

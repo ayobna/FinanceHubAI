@@ -1,4 +1,6 @@
+using FinanceHubAI.Api.Services;
 using FinanceHubAI.Application;
+using FinanceHubAI.Application.Common.Interfaces;
 using FinanceHubAI.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 var app = builder.Build();
 

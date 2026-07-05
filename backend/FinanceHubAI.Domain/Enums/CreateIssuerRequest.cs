@@ -1,10 +1,8 @@
-﻿using FinanceHubAI.Application.Common.Responses;
-using FinanceHubAI.Domain.Enums;
-using MediatR;
+﻿using FinanceHubAI.Domain.Enums;
 
-namespace FinanceHubAI.Application.Issuers.Commands.CreateIssuer;
+namespace FinanceHubAI.Api.Contracts.Issuers;
 
-public sealed record CreateIssuerCommand(
+public sealed record CreateIssuerRequest(
     string Name,
     string LegalName,
     string RegistrationNumber,
@@ -19,4 +17,4 @@ public sealed record CreateIssuerCommand(
     bool IsPublicCompany,
     decimal? MarketCap,
     string? StockSymbol
-) : IRequest<Result<Guid>>;
+);
