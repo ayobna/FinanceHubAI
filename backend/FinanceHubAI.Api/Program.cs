@@ -1,3 +1,4 @@
+using FinanceHubAI.Api.Middleware;
 using FinanceHubAI.Api.Services;
 using FinanceHubAI.Application;
 using FinanceHubAI.Application.Common.Interfaces;
@@ -15,6 +16,8 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

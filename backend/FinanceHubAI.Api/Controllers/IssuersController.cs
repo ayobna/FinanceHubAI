@@ -1,4 +1,5 @@
-﻿using FinanceHubAI.Api.Contracts.Issuers;
+﻿using FinanceHubAI.Api.Common;
+using FinanceHubAI.Api.Contracts.Issuers;
 using FinanceHubAI.Application.Issuers.Commands.CreateIssuer;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -37,21 +38,17 @@ public class IssuersController : ControllerBase
             request.MarketCap,
             request.StockSymbol);
 
+
         var result = await _sender.Send(command, cancellationToken);
 
         if (result.IsFailure)
         {
-            return BadRequest(new
-            {
-                code = result.Error.Code,
-                message = result.Error.Message
-            });
+            return BadRequest(ApiResponse<object>.Fail( result.Error.Code, result.Error.Message));
         }
 
-        // TODO: Replace nameof(Create) with nameof(GetById) once the GET endpoint is implemented.
         return CreatedAtAction(
             nameof(Create),
             new { id = result.Value },
-            new { id = result.Value });
+            ApiResponse<object>.Ok(new { id = result.Value }));
     }
 }

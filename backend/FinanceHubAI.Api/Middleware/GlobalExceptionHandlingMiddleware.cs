@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+﻿ using FinanceHubAI.Application.Common.Exceptions;
 using System.Net;
 using System.Text.Json;
 
@@ -9,9 +9,7 @@ public class GlobalExceptionHandlingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
 
-    public GlobalExceptionHandlingMiddleware(
-        RequestDelegate next,
-        ILogger<GlobalExceptionHandlingMiddleware> logger)
+    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -23,7 +21,7 @@ public class GlobalExceptionHandlingMiddleware
         {
             await _next(context);
         }
-        catch (ValidationException ex)
+        catch (ApplicationValidationException ex)
         {
             await HandleValidationExceptionAsync(context, ex);
         }
@@ -35,29 +33,26 @@ public class GlobalExceptionHandlingMiddleware
         {
             _logger.LogError(ex, "Unhandled exception occurred");
 
-            await HandleExceptionAsync(
-                context,
-                ex,
-                HttpStatusCode.InternalServerError);
+            await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
         }
     }
 
     private static async Task HandleValidationExceptionAsync(
         HttpContext context,
-        ValidationException exception)
+        ApplicationValidationException exception)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
 
         var response = new
         {
-            title = "Validation failed",
-            status = StatusCodes.Status400BadRequest,
-            errors = exception.Errors.Select(error => new
+            success = false,
+            error = new
             {
-                field = error.PropertyName,
-                message = error.ErrorMessage
-            })
+                code = "Validation.Failed",
+                message = exception.Message,
+                details = exception.Errors
+            }
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
@@ -73,10 +68,16 @@ public class GlobalExceptionHandlingMiddleware
 
         var response = new
         {
-            title = statusCode == HttpStatusCode.InternalServerError
-                ? "An unexpected error occurred"
-                : exception.Message,
-            status = (int)statusCode
+            success = false,
+            error = new
+            {
+                code = statusCode == HttpStatusCode.InternalServerError
+                    ? "Server.Error"
+                    : "Request.Invalid",
+                message = statusCode == HttpStatusCode.InternalServerError
+                    ? "An unexpected error occurred."
+                    : exception.Message
+            }
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(response));
