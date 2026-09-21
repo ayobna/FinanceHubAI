@@ -1,6 +1,7 @@
 ﻿using FinanceHubAI.Api.Common;
 using FinanceHubAI.Api.Contracts.Issuers;
 using FinanceHubAI.Application.Issuers.Commands.CreateIssuer;
+using FinanceHubAI.Application.Issuers.Queries.GetIssuerById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,12 +44,32 @@ public class IssuersController : ControllerBase
 
         if (result.IsFailure)
         {
-            return BadRequest(ApiResponse<object>.Fail( result.Error.Code, result.Error.Message));
+            return BadRequest(ApiResponse<object>.Fail(result.Error.Code, result.Error.Message));
         }
 
         return CreatedAtAction(
-            nameof(Create),
-            new { id = result.Value },
-            ApiResponse<object>.Ok(new { id = result.Value }));
+           nameof(GetById),
+           new { id = result.Value },
+           ApiResponse<object>.Ok(new { id = result.Value }));
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        var query = new GetIssuerByIdQuery(id);
+
+        var result = await _sender.Send(query, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return NotFound(
+                ApiResponse<object>.Fail(
+                    result.Error.Code,
+                    result.Error.Message));
+        }
+
+        return Ok(ApiResponse<IssuerDto>.Ok(result.Value));
     }
 }
